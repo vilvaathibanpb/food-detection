@@ -70,22 +70,44 @@
         }
 
         .spinner {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 64px; /* Adjust size of spinner */
-  height: 64px; /* Adjust size of spinner */
-  border: 4px solid rgba(0, 0, 0, 0.1); /* Adjust border color and width */
-  border-left-color: #3498db; /* Adjust spinner color */
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  transform: translate(-50%, -50%);
-}
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 64px;
+            /* Adjust size of spinner */
+            height: 64px;
+            /* Adjust size of spinner */
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            /* Adjust border color and width */
+            border-left-color: #3498db;
+            /* Adjust spinner color */
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            transform: translate(-50%, -50%);
+        }
 
-@keyframes spin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
+        @keyframes spin {
+            0% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+
+            100% {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
+        #video {
+            width: 100%;
+            max-width: 640px;
+            margin: 20px auto;
+            display: block;
+        }
+
+        #capturedImage {
+            max-width: 100%;
+            margin: 20px auto;
+            display: block;
+        }
     </style>
 </head>
 
@@ -109,6 +131,7 @@
             </div>
         </div>
 
+        <video id="video" autoplay></video>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
@@ -130,6 +153,75 @@
         const hide1 = document.getElementById('hide1');
         const container = document.getElementById('container');
         const spinner = document.getElementById('spinner');
+
+        const video = document.getElementById('video');
+const capturedImage = document.getElementById('capturedImage');
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+
+// Constraints for the getUserMedia API
+const constraints = {
+    video: true
+};
+
+// Accessing the user's camera
+navigator.mediaDevices.getUserMedia(constraints)
+    .then(function(stream) {
+        video.srcObject = stream;
+    })
+    .catch(function(error) {
+        console.error('Error accessing the camera:', error);
+    });
+
+// // When video metadata is loaded, execute this
+// video.addEventListener('loadedmetadata', function() {
+//     canvas.width = video.videoWidth;
+//     canvas.height = video.videoHeight;
+// });
+
+// Function to capture a frame from the video stream and update image src
+function captureFrameAndUpdate() {
+    ctx.drawImage(video, 0, 0, 192, 192);
+    // Convert canvas to base64 image
+    const imageData = canvas.toDataURL('image/png');
+    image.src = imageData;
+
+    image.onload = async () => {
+                try {
+
+                    const inputTensor = tf.cast(tf.image
+                        .resizeBilinear(tf.browser.fromPixels(document.querySelector("img")), [
+                            192,
+                            192
+                        ])
+                        .expandDims()
+                        , 'int32');
+
+
+
+                    const outputTensor = tf.cast(tfliteModel.predict(inputTensor), 'float32');
+
+                    const probabilities = tf.softmax(outputTensor).dataSync();
+
+                    probabilities.forEach((value, index) => {
+                        if (value > 0.9) {
+                            hide.style.display = 'block';
+                            hide1.style.display = 'block';
+                            image.style.display = 'block';
+                            food.innerText = `${dict[index]}`;
+                        }
+                    })
+
+                } catch (e) {
+                    console.log(e);
+                }
+            }
+}
+
+// Example usage: capture a frame and update image every 2 seconds
+setInterval(function() {
+    captureFrameAndUpdate();
+}, 2000);
 
         const dict = {
             "0": "__background__",
