@@ -116,6 +116,8 @@
         <div class="spinner" id="spinner"></div>
         <div class="container" id="container">
             <h1>Food Detection</h1>
+            <video id="video" autoplay></video>
+
             <label for="upload" class="custom-file-upload">
                 <span>Select an image to upload</span>
                 <input type="file" id="upload" accept="image/*">
@@ -131,7 +133,6 @@
             </div>
         </div>
 
-        <video id="video" autoplay></video>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
@@ -155,38 +156,38 @@
         const spinner = document.getElementById('spinner');
 
         const video = document.getElementById('video');
-const capturedImage = document.getElementById('capturedImage');
-const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d');
+        const capturedImage = document.getElementById('capturedImage');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
 
-// Constraints for the getUserMedia API
-const constraints = {
-    video: true
-};
+        // Constraints for the getUserMedia API
+        const constraints = {
+            video: true
+        };
 
-// Accessing the user's camera
-navigator.mediaDevices.getUserMedia(constraints)
-    .then(function(stream) {
-        video.srcObject = stream;
-    })
-    .catch(function(error) {
-        console.error('Error accessing the camera:', error);
-    });
+        // Accessing the user's camera
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(function (stream) {
+                video.srcObject = stream;
+            })
+            .catch(function (error) {
+                console.error('Error accessing the camera:', error);
+            });
 
-// // When video metadata is loaded, execute this
-// video.addEventListener('loadedmetadata', function() {
-//     canvas.width = video.videoWidth;
-//     canvas.height = video.videoHeight;
-// });
+        // // When video metadata is loaded, execute this
+        // video.addEventListener('loadedmetadata', function() {
+        //     canvas.width = video.videoWidth;
+        //     canvas.height = video.videoHeight;
+        // });
 
-// Function to capture a frame from the video stream and update image src
-function captureFrameAndUpdate() {
-    ctx.drawImage(video, 0, 0, 192, 192);
-    // Convert canvas to base64 image
-    const imageData = canvas.toDataURL('image/png');
-    image.src = imageData;
+        // Function to capture a frame from the video stream and update image src
+        function captureFrameAndUpdate() {
+            ctx.drawImage(video, 0, 0, 192, 192);
+            // Convert canvas to base64 image
+            const imageData = canvas.toDataURL('image/png');
+            image.src = imageData;
 
-    image.onload = async () => {
+            image.onload = async () => {
                 try {
 
                     const inputTensor = tf.cast(tf.image
@@ -216,12 +217,12 @@ function captureFrameAndUpdate() {
                     console.log(e);
                 }
             }
-}
+        }
 
-// Example usage: capture a frame and update image every 2 seconds
-setInterval(function() {
-    captureFrameAndUpdate();
-}, 2000);
+        // Example usage: capture a frame and update image every 2 seconds
+        setInterval(function () {
+            captureFrameAndUpdate();
+        }, 2000);
 
         const dict = {
             "0": "__background__",
